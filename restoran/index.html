@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Restoran Lezat</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        h1 { color: #333; }
+        #menu-list { margin-top: 20px; }
+        #message { margin-top: 20px; color: green; }
+        ul { list-style-type: none; padding: 0; }
+        li { margin: 10px 0; padding: 10px; border: 1px solid #ccc; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <h1>Menu Restoran Roxy</h1>
+    <button onclick="loadMenu()">Muatan Menu</button>
+    <button onclick="showItem()" style="display: none;" id="show-item">Tampilkan Menu</button>
+    <button onclick="closeMenu()" style="display: none;" id="close-menu">Tutup Menu</button>
+    
+    <h3>Tambahkan Menu Baru</h3>
+    <label for="name">Nama:</label>
+    <input type="text" id="name"><br>
+    <label for="description">Deskripsi:</label>
+    <input type="text" id="description"><br>
+    <label for="price">Harga:</label>
+    <input type="number" id="price"><br>
+    <button onclick="addMenu()">Tambah Menu</button>
+    
+    <div id="menu-list"></div>
+    <div id="message"></div>
+
+    <script>
+        let menuItems = [];
+        let currentIndex = 0;
+
+        function loadMenu() {
+            fetch('menu.php')
+                .then(response => response.json())
+                .then(data => {
+                    menuItems = data;
+                    currentIndex = 0;
+                    document.getElementById('message').innerHTML = '';
+                    document.getElementById('menu-list').innerHTML = '';
+                    document.getElementById('show-item').style.display = 'inline';
+                    document.getElementById('close-menu').style.display = 'inline';
+                })
+                .catch(error => {
+                    document.getElementById('menu-list').innerHTML = 'Gagal memuat menu.';
+                });
+        }
+
+        function showItem() {
+            if (currentIndex < menuItems.length) {
+                const item = menuItems[currentIndex];
+                document.getElementById('menu-list').innerHTML += `<li><strong>${item.name}</strong>: ${item.description} - Rp ${item.price}</li>`;
+                currentIndex++;
+            } else {
+                document.getElementById('show-item').style.display = 'none';
+                document.getElementById('message').innerHTML = 'Semua menu telah ditampilkan.';
+            }
+        }
+
+        function closeMenu() {
+            document.getElementById('menu-list').innerHTML = '';
+            document.getElementById('show-item').style.display = 'none';
+            document.getElementById('close-menu').style.display = 'none';
+            document.getElementById('message').innerHTML = 'Menu telah ditutup.';
+        }
+
+        function addMenu() {
+            const name = document.getElementById('name').value;
+            const description = document.getElementById('description').value;
+            const price = document.getElementById('price').value;
+
+            fetch('add_menu.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                body: `name=${encodeURIComponent(name)}&description=${encodeURIComponent(description)}&price=${encodeURIComponent(price)}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('message').innerHTML = data.message || data.error;
+                loadMenu(); // Reload menu to show the newly added item
+            })
+            .catch(error => {
+                document.getElementById('message').innerHTML = 'Gagal menambahkan menu.';
+            });
+        }
+    </script>
+</body>
+</html>
